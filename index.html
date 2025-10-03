@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>League Comp Builder</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #181a20; color: #eaeaea; margin: 0; }
+    header { background: #20232a; padding: 1rem; text-align: center; font-size: 2rem; }
+    main { max-width: 900px; margin: 2rem auto; padding: 2rem; background: #23272f; border-radius: 12px; }
+    section { margin-bottom: 2rem; }
+    label { display: block; margin-bottom: 0.5rem; }
+    input, select, button, textarea { margin-bottom: 1rem; padding: 0.5rem; border-radius: 6px; border: none; }
+    input, select, textarea { width: 100%; }
+    button { background: #5865f2; color: #fff; cursor: pointer; font-weight: bold; }
+    .comp-list { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .comp-card { background: #2c2f36; padding: 1rem; border-radius: 8px; min-width: 220px; }
+    .champion { font-weight: bold; color: #f7b731; }
+    .synergy { color: #43b581; font-weight: bold; }
+    .warning { color: #faa61a; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <header>League Comp Builder</header>
+  <div style="text-align:center; margin-top:1rem; margin-bottom:2rem; font-size:1.2rem; color:#f7b731;">
+    <b>Team Playstyle Advice:</b><br>
+    Your team has strong individual fighters in solo lanes, a low-resource jungler, a roaming support, and an ADC who prefers to farm and scale. <br>
+    <span style="color:#eaeaea;">For best results, play around top lane early with jungle/support roams, enable mid to roam, and let ADC scale. Use aggressive dive comps to snowball leads, or poke comps to siege and control objectives when ahead.</span>
+  </div>
+  <main>
+    <section id="recommend-section">
+      <h2>Recommended Team Comps</h2>
+      <div style="display:flex; gap:2rem; justify-content:center;">
+        <div style="flex:1; min-width:220px;">
+          <h3 style="text-align:center; color:#43b581;">Dive Comp</h3>
+          <div class="comp-list" id="dive-list"></div>
+        </div>
+        <div style="flex:1; min-width:220px;">
+          <h3 style="text-align:center; color:#faa61a;">Poke Comp</h3>
+          <div class="comp-list" id="poke-list"></div>
+        </div>
+      </div>
+    </section>
+    <section id="manual-section">
+      <h2>Manual Comp Builder</h2>
+      <form id="manual-form">
+        <label>Top Champion</label>
+        <input type="text" id="manual-top" />
+        <label>Jungle Champion</label>
+        <input type="text" id="manual-jungle" />
+        <label>Mid Champion</label>
+        <input type="text" id="manual-mid" />
+        <label>ADC Champion</label>
+        <input type="text" id="manual-adc" />
+        <label>Support Champion</label>
+        <input type="text" id="manual-support" />
+        <button type="submit">Analyze Comp</button>
+      </form>
+      <div id="manual-result"></div>
+    </section>
+  </main>
+  <script>
+    // --- Data Models ---
+    let roster = {
+      top: { name: 'Vesomnia#2116', style: 'Likes to fight 1v1, requests frequent ganks.' },
+      jungle: { name: 'Zoah#NA1', style: 'Low resource, quiet, doesn\'t communicate much.' },
+  mid: { name: 'i love taeyong#NCT', style: 'Has a hard time blocking skillshots, good roaming potential, doesn\'t talk much.' },
+  adc: { name: 'rain#kiwi', style: 'Likes support nearby, gets ahead early by farming, roams for farm, sometimes misses fights.' },
+  support: { name: 'Nappikan#NA1', style: 'Roams a lot, aggressive, clumps with jungler or team, likes to fight.' }
+    };
+
+    // --- Roster Form Logic ---
+    document.getElementById('roster-form').onsubmit = async function(e) {
+      e.preventDefault();
+      roster.top.name = document.getElementById('top-name').value;
+      roster.jungle.name = document.getElementById('jungle-name').value;
+      roster.mid.name = document.getElementById('mid-name').value;
+      roster.adc.name = document.getElementById('adc-name').value;
+      roster.support.name = document.getElementById('support-name').value;
+      alert('Roster saved!');
+      await fetchAllMastery();
+      showRecommendedComps();
+    };
+
+    // --- Champion Mastery Scraping ---
+    let masteryData = {
+      top: [],
+      jungle: [],
+      mid: [],
+      adc: [],
+      support: []
+    };
+
+    async function fetchMastery(accountName, role) {
+      // op.gg blocks CORS, so we use a public API as a placeholder
+      // In production, use a backend proxy or Riot API
+      // Example: https://na.op.gg/summoners/na/Vesomnia-2116
+      // For now, simulate with static data
+      const staticChampions = {
+        top: ['Camille', 'Jax', 'Aatrox', 'Renekton', 'Fiora'],
+        jungle: ['Jarvan IV', 'Lee Sin', 'Vi', 'Kindred', 'Kha\'Zix'],
+        mid: ['Akali', 'Zoe', 'Ahri', 'Syndra', 'LeBlanc'],
+        adc: ['Kai\'Sa', 'Ezreal', 'Jinx', 'Xayah', 'Caitlyn'],
+        support: ['Leona', 'Nautilus', 'Zyra', 'Thresh', 'Rakan']
+      };
+      masteryData[role] = staticChampions[role];
+    }
+
+    async function fetchAllMastery() {
+      await fetchMastery(roster.top.name, 'top');
+      await fetchMastery(roster.jungle.name, 'jungle');
+      await fetchMastery(roster.mid.name, 'mid');
+      await fetchMastery(roster.adc.name, 'adc');
+      await fetchMastery(roster.support.name, 'support');
+    }
+
+    // --- Recommended Comps Logic ---
+    function showRecommendedComps() {
+      // Suggest comps using most played champions for each role
+      const diveComp = [
+        masteryData.top[0] || 'Camille',
+        masteryData.jungle[0] || 'Jarvan IV',
+        masteryData.mid[0] || 'Akali',
+        masteryData.adc[0] || 'Kai\'Sa',
+        masteryData.support[0] || 'Leona'
+      ];
+      const pokeComp = [
+        masteryData.top[1] || 'Jayce',
+        masteryData.jungle[3] || 'Kindred',
+        masteryData.mid[1] || 'Zoe',
+        masteryData.adc[1] || 'Ezreal',
+        masteryData.support[2] || 'Zyra'
+      ];
+      const comps = [
+        {
+          type: 'Dive',
+          champions: diveComp,
+          synergy: 'High engage, strong burst, good for aggressive playstyles.'
+        },
+        {
+          type: 'Poke',
+          champions: pokeComp,
+          synergy: 'Long range, strong poke, good for kiting and sieging.'
+        }
+      ];
+      const compList = document.getElementById('comp-list');
+      compList.innerHTML = '';
+      comps.forEach(comp => {
+        const card = document.createElement('div');
+        card.className = 'comp-card';
+        card.innerHTML = `<div><b>${comp.type} Comp</b></div>
+          <div>${comp.champions.map(c => `<span class='champion'>${c}</span>`).join(' | ')}</div>
+          <div class='synergy'>${comp.synergy}</div>`;
+        compList.appendChild(card);
+      });
+    }
+    fetchAllMastery().then(showRecommendedComps);
+
+    // --- Manual Comp Builder Logic ---
+    document.getElementById('manual-form').onsubmit = function(e) {
+      e.preventDefault();
+      const top = document.getElementById('manual-top').value.trim();
+      const jungle = document.getElementById('manual-jungle').value.trim();
+      const mid = document.getElementById('manual-mid').value.trim();
+      const adc = document.getElementById('manual-adc').value.trim();
+      const support = document.getElementById('manual-support').value.trim();
+      const champs = [top, jungle, mid, adc, support];
+      const result = analyzeComp(champs);
+      document.getElementById('manual-result').innerHTML = result;
+    };
+
+    // --- Comp Analysis Logic (Stub) ---
+    function analyzeComp(champs) {
+      // This is a stub. Real logic would analyze synergy, engage, poke, etc.
+      if (champs.includes('Leona') && champs.includes('Jarvan IV')) {
+        return `<div class='synergy'>Strong engage potential!</div>`;
+      }
+      if (champs.includes('Ezreal') && champs.includes('Zyra')) {
+        return `<div class='synergy'>Great poke and zone control!</div>`;
+      }
+      if (champs.filter(c => c).length < 5) {
+        return `<div class='warning'>Please enter all 5 champions.</div>`;
+      }
+      return `<div class='synergy'>Comp synergy analysis coming soon!</div>`;
+    }
+  </script>
+</body>
+</html>
