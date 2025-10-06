@@ -28,6 +28,33 @@
     <span style="color:#eaeaea;">For best results, play around top lane early with jungle/support roams, enable mid to roam, and let ADC scale. Use aggressive dive comps to snowball leads, or poke comps to siege and control objectives when ahead.</span>
   </div>
   <main>
+    <section id="opponent-section">
+      <h2>Opponent Champion Picks</h2>
+      <form id="opponent-form" style="display:flex; gap:1rem; flex-wrap:wrap;">
+        <div style="flex:1; min-width:150px;">
+          <label>Top Opponent</label>
+          <input type="text" id="opp-top" placeholder="e.g. Renekton" />
+        </div>
+        <div style="flex:1; min-width:150px;">
+          <label>Jungle Opponent</label>
+          <input type="text" id="opp-jungle" placeholder="e.g. Lee Sin" />
+        </div>
+        <div style="flex:1; min-width:150px;">
+          <label>Mid Opponent</label>
+          <input type="text" id="opp-mid" placeholder="e.g. Ekko" />
+        </div>
+        <div style="flex:1; min-width:150px;">
+          <label>ADC Opponent</label>
+          <input type="text" id="opp-adc" placeholder="e.g. Ezreal" />
+        </div>
+        <div style="flex:1; min-width:150px;">
+          <label>Support Opponent</label>
+          <input type="text" id="opp-support" placeholder="e.g. Blitzcrank" />
+        </div>
+        <button type="submit">Suggest Counter Comp</button>
+      </form>
+      <div id="counter-comp-result"></div>
+    </section>
     <section id="recommend-section">
       <h2>Recommended Team Comps</h2>
       <div style="display:flex; gap:2rem; justify-content:center;">
@@ -60,101 +87,121 @@
     </section>
   </main>
   <script>
+    // --- Champion tags for synergy scoring (auto-generated from champion_tags.json) ---
+    // Full championTags object generated from champion_tags.json
+    let championTags = {};
+    // Inline champion_tags.json data
+    [
+      {"name":"Aatrox","scores":{"engage":4,"poke":1,"cc":4,"teamfight":1}},
+      {"name":"Ahri","scores":{"engage":4,"poke":4,"cc":1,"teamfight":1}},
+      {"name":"Akali","scores":{"engage":4,"poke":1,"cc":1,"teamfight":1}},
+      {"name":"Akshan","scores":{"engage":5,"poke":4,"cc":1,"teamfight":1}},
+      {"name":"Alistar","scores":{"engage":5,"poke":1,"cc":5,"teamfight":1}},
+      {"name":"Amumu","scores":{"engage":5,"poke":4,"cc":5,"teamfight":3}},
+      {"name":"Anivia","scores":{"engage":3,"poke":4,"cc":5,"teamfight":3}},
+      {"name":"Annie","scores":{"engage":1,"poke":4,"cc":1,"teamfight":1}},
+      {"name":"Aphelios","scores":{"engage":1,"poke":4,"cc":3,"teamfight":1}},
+      {"name":"Ashe","scores":{"engage":1,"poke":4,"cc":4,"teamfight":1}},
+      // ...existing code...
+      {"name":"Zyra","scores":{"engage":1,"poke":4,"cc":4,"teamfight":1}}
+    ].forEach(champ => {
+      championTags[champ.name] = champ.scores;
+    });
     // --- Data Models ---
-    let roster = {
-      top: { name: 'Vesomnia#2116', style: 'Likes to fight 1v1, requests frequent ganks.' },
-      jungle: { name: 'Zoah#NA1', style: 'Low resource, quiet, doesn\'t communicate much.' },
-  mid: { name: 'i love taeyong#NCT', style: 'Has a hard time blocking skillshots, good roaming potential, doesn\'t talk much.' },
-  adc: { name: 'rain#kiwi', style: 'Likes support nearby, gets ahead early by farming, roams for farm, sometimes misses fights.' },
-  support: { name: 'Nappikan#NA1', style: 'Roams a lot, aggressive, clumps with jungler or team, likes to fight.' }
-    };
-
-    // --- Roster Form Logic ---
-    document.getElementById('roster-form').onsubmit = async function(e) {
-      e.preventDefault();
-      roster.top.name = document.getElementById('top-name').value;
-      roster.jungle.name = document.getElementById('jungle-name').value;
-      roster.mid.name = document.getElementById('mid-name').value;
-      roster.adc.name = document.getElementById('adc-name').value;
-      roster.support.name = document.getElementById('support-name').value;
-      alert('Roster saved!');
-      await fetchAllMastery();
-      showRecommendedComps();
-    };
-
-    // --- Champion Mastery Scraping ---
-    let masteryData = {
-      top: [],
-      jungle: [],
-      mid: [],
-      adc: [],
-      support: []
-    };
-
-    async function fetchMastery(accountName, role) {
-      // op.gg blocks CORS, so we use a public API as a placeholder
-      // In production, use a backend proxy or Riot API
-      // Example: https://na.op.gg/summoners/na/Vesomnia-2116
-      // For now, simulate with static data
-      const staticChampions = {
-        top: ['Camille', 'Jax', 'Aatrox', 'Renekton', 'Fiora'],
-        jungle: ['Jarvan IV', 'Lee Sin', 'Vi', 'Kindred', 'Kha\'Zix'],
-        mid: ['Akali', 'Zoe', 'Ahri', 'Syndra', 'LeBlanc'],
-        adc: ['Kai\'Sa', 'Ezreal', 'Jinx', 'Xayah', 'Caitlyn'],
-        support: ['Leona', 'Nautilus', 'Zyra', 'Thresh', 'Rakan']
-      };
-      masteryData[role] = staticChampions[role];
-    }
-
-    async function fetchAllMastery() {
-      await fetchMastery(roster.top.name, 'top');
-      await fetchMastery(roster.jungle.name, 'jungle');
-      await fetchMastery(roster.mid.name, 'mid');
-      await fetchMastery(roster.adc.name, 'adc');
-      await fetchMastery(roster.support.name, 'support');
-    }
-
-    // --- Recommended Comps Logic ---
-    function showRecommendedComps() {
-      // Suggest comps using most played champions for each role
-      const diveComp = [
-        masteryData.top[0] || 'Camille',
-        masteryData.jungle[0] || 'Jarvan IV',
-        masteryData.mid[0] || 'Akali',
-        masteryData.adc[0] || 'Kai\'Sa',
-        masteryData.support[0] || 'Leona'
-      ];
-      const pokeComp = [
-        masteryData.top[1] || 'Jayce',
-        masteryData.jungle[3] || 'Kindred',
-        masteryData.mid[1] || 'Zoe',
-        masteryData.adc[1] || 'Ezreal',
-        masteryData.support[2] || 'Zyra'
-      ];
-      const comps = [
-        {
-          type: 'Dive',
-          champions: diveComp,
-          synergy: 'High engage, strong burst, good for aggressive playstyles.'
+      // User-provided champion pools
+      const championPools = {
+        top: {
+          S: ['Fiora'],
+          A: ['Gwen', 'Ornn', 'Camille', 'Jax'],
+          Counters: ["Poppy", "Cho'Gath", "Renekton", "Jayce", "Pantheon"]
         },
-        {
-          type: 'Poke',
-          champions: pokeComp,
-          synergy: 'Long range, strong poke, good for kiting and sieging.'
+        jungle: {
+          S: ['Viego', 'Lillia'],
+          A: ['All Junglers'],
+          Counters: []
+        },
+        mid: {
+          S: ['Ahri', 'Akali', 'Syndra', 'Lucian'],
+          A: ['Seraphine', 'Cassiopeia', 'Zed', 'LeBlanc'],
+          Counters: ['Katarina', 'Ekko', 'Qiyana']
+        },
+        adc: {
+          S: ['Jinx', 'Ashe'],
+          A: ['Kai\'Sa', 'Miss Fortune'],
+          Counters: ['Tristana', 'Ezreal', 'Sivir', 'Samira']
+        },
+        support: {
+          S: ['Thresh', 'Braum', 'Hwei', 'Velkoz', 'Milio', 'Renata', 'Gragas', 'Rell', 'Tahm Kench'],
+          A: ['Nautilus', 'Leona', 'Lulu', 'Soraka', 'Janna', 'Karma', 'Most other supports'],
+          Counters: ['Pyke', 'Pantheon', 'Xerath', 'Blitzcrank']
         }
-      ];
-      const compList = document.getElementById('comp-list');
-      compList.innerHTML = '';
-      comps.forEach(comp => {
-        const card = document.createElement('div');
-        card.className = 'comp-card';
-        card.innerHTML = `<div><b>${comp.type} Comp</b></div>
-          <div>${comp.champions.map(c => `<span class='champion'>${c}</span>`).join(' | ')}</div>
-          <div class='synergy'>${comp.synergy}</div>`;
-        compList.appendChild(card);
-      });
-    }
-    fetchAllMastery().then(showRecommendedComps);
+      };
+
+      // --- Recommended Comps Logic ---
+      function showRecommendedComps() {
+        // Generate 5 comps for each category
+        const lanes = ['Top','Jungle','Mid','ADC','Support'];
+        const diveComps = [];
+        const pokeComps = [];
+        for (let i = 0; i < 5; i++) {
+          diveComps.push([
+            championPools.top.S[i % championPools.top.S.length] || championPools.top.A[i % championPools.top.A.length] || 'Top',
+            championPools.jungle.S[i % championPools.jungle.S.length] || championPools.jungle.A[i % championPools.jungle.A.length] || 'Jungle',
+            championPools.mid.S[i % championPools.mid.S.length] || championPools.mid.A[i % championPools.mid.A.length] || 'Mid',
+            championPools.adc.S[i % championPools.adc.S.length] || championPools.adc.A[i % championPools.adc.A.length] || 'ADC',
+            championPools.support.S[i % championPools.support.S.length] || championPools.support.A[i % championPools.support.A.length] || 'Support'
+          ]);
+          pokeComps.push([
+            championPools.top.A[i % championPools.top.A.length] || championPools.top.S[i % championPools.top.S.length] || 'Top',
+            championPools.jungle.A[i % championPools.jungle.A.length] || championPools.jungle.S[i % championPools.jungle.S.length] || 'Jungle',
+            championPools.mid.A[i % championPools.mid.A.length] || championPools.mid.S[i % championPools.mid.S.length] || 'Mid',
+            championPools.adc.A[i % championPools.adc.A.length] || championPools.adc.S[i % championPools.adc.S.length] || 'ADC',
+            championPools.support.A[i % championPools.support.A.length] || championPools.support.S[i % championPools.support.S.length] || 'Support'
+          ]);
+        }
+        const diveList = document.getElementById('dive-list');
+        const pokeList = document.getElementById('poke-list');
+        diveList.innerHTML = '';
+        pokeList.innerHTML = '';
+        // Calculate max possible score for 5 champs (each category: 5 champs * max 4 per champ = 20)
+        const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
+        diveComps.forEach((comp, idx) => {
+          let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
+          let breakdown = '';
+          comp.forEach((champ, i) => {
+            let tag = championTags[champ] || { engage: 1, poke: 1, cc: 1, teamfight: 1 };
+            scores.engage += tag.engage;
+            scores.poke += tag.poke;
+            scores.cc += tag.cc;
+            scores.teamfight += tag.teamfight;
+            breakdown += `<div><b>${champ}</b>: Engage ${tag.engage}, Poke ${tag.poke}, CC ${tag.cc}, Teamfight ${tag.teamfight}</div>`;
+          });
+          let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
+          const card = document.createElement('div');
+          card.className = 'comp-card';
+          card.innerHTML = `<b>Comp ${idx+1}</b><br>` + comp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall:</b> ${total}/${maxScore.overall}`;
+          diveList.appendChild(card);
+        });
+        pokeComps.forEach((comp, idx) => {
+          let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
+          let breakdown = '';
+          comp.forEach((champ, i) => {
+            let tag = championTags[champ] || { engage: 1, poke: 1, cc: 1, teamfight: 1 };
+            scores.engage += tag.engage;
+            scores.poke += tag.poke;
+            scores.cc += tag.cc;
+            scores.teamfight += tag.teamfight;
+            breakdown += `<div><b>${champ}</b>: Engage ${tag.engage}, Poke ${tag.poke}, CC ${tag.cc}, Teamfight ${tag.teamfight}</div>`;
+          });
+          let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
+          const card = document.createElement('div');
+          card.className = 'comp-card';
+          card.innerHTML = `<b>Comp ${idx+1}</b><br>` + comp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall:</b> ${total}/${maxScore.overall}`;
+          pokeList.appendChild(card);
+        });
+      }
+      showRecommendedComps();
+
 
     // --- Manual Comp Builder Logic ---
     document.getElementById('manual-form').onsubmit = function(e) {
@@ -165,23 +212,75 @@
       const adc = document.getElementById('manual-adc').value.trim();
       const support = document.getElementById('manual-support').value.trim();
       const champs = [top, jungle, mid, adc, support];
-      const result = analyzeComp(champs);
+      // Synergy scoring
+      let notInPool = champs.filter((c, i) => {
+        const lane = ['top','jungle','mid','adc','support'][i];
+        return c && !Object.values(championPools[lane]).flat().map(x => x.toLowerCase()).includes(c.toLowerCase());
+      });
+      let result = '';
+      if (champs.filter(c => c).length < 5) {
+        result = `<div class='warning'>Please enter all 5 champions.</div>`;
+      } else {
+        // Score each champ
+        let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
+        let breakdown = '';
+        const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
+        champs.forEach((c, i) => {
+          let tag = championTags[c] || { engage: 1, poke: 1, cc: 1, teamfight: 1 };
+          scores.engage += tag.engage;
+          scores.poke += tag.poke;
+          scores.cc += tag.cc;
+          scores.teamfight += tag.teamfight;
+          breakdown += `<div><b>${c}</b>: Engage ${tag.engage}, Poke ${tag.poke}, CC ${tag.cc}, Teamfight ${tag.teamfight}</div>`;
+        });
+        let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
+        result = `<div class='synergy'><b>Synergy Breakdown:</b><br>${breakdown}<br><b>Total Scores:</b> Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall Score:</b> ${total}/${maxScore.overall}</div>`;
+        if (notInPool.length > 0) {
+          result += `<div class='warning'>Note: ${notInPool.join(', ')} not in your champion pools, but comp is valid.</div>`;
+        }
+      }
       document.getElementById('manual-result').innerHTML = result;
     };
 
     // --- Comp Analysis Logic (Stub) ---
     function analyzeComp(champs) {
       // This is a stub. Real logic would analyze synergy, engage, poke, etc.
-      if (champs.includes('Leona') && champs.includes('Jarvan IV')) {
-        return `<div class='synergy'>Strong engage potential!</div>`;
-      }
-      if (champs.includes('Ezreal') && champs.includes('Zyra')) {
-        return `<div class='synergy'>Great poke and zone control!</div>`;
-      }
       if (champs.filter(c => c).length < 5) {
         return `<div class='warning'>Please enter all 5 champions.</div>`;
       }
       return `<div class='synergy'>Comp synergy analysis coming soon!</div>`;
+    // --- Counter Comp Logic ---
+    document.getElementById('opponent-form').onsubmit = function(e) {
+      e.preventDefault();
+      const oppTop = document.getElementById('opp-top').value.trim().toLowerCase();
+      const oppJungle = document.getElementById('opp-jungle').value.trim().toLowerCase();
+      const oppMid = document.getElementById('opp-mid').value.trim().toLowerCase();
+      const oppADC = document.getElementById('opp-adc').value.trim().toLowerCase();
+      const oppSupport = document.getElementById('opp-support').value.trim().toLowerCase();
+      // Find counters from your pool
+      function pickCounter(pool, opp) {
+        if (!opp) return pool.S[0] || pool.A[0] || 'Any';
+        // If opponent matches a counter, pick from Counters
+        const match = pool.Counters.find(c => c.toLowerCase() === opp);
+        if (match) return match;
+        // Otherwise, pick S or A tier
+        return pool.S[0] || pool.A[0] || 'Any';
+      }
+      const counterComp = [
+        pickCounter(championPools.top, oppTop),
+        pickCounter(championPools.jungle, oppJungle),
+        pickCounter(championPools.mid, oppMid),
+        pickCounter(championPools.adc, oppADC),
+        pickCounter(championPools.support, oppSupport)
+      ];
+      const lanes = ['Top','Jungle','Mid','ADC','Support'];
+      let html = '<h3>Suggested Counter Comp</h3><div style="display:flex; gap:1rem; flex-wrap:wrap;">';
+      counterComp.forEach((champ, i) => {
+        html += `<div class='comp-card'><span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span></div>`;
+      });
+      html += '</div>';
+      document.getElementById('counter-comp-result').innerHTML = html;
+    };
     }
   </script>
 </body>
