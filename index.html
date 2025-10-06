@@ -200,50 +200,89 @@
     </section>
   </main>
   <script>
-    // --- Champion tags for synergy scoring (auto-generated from champion_tags.json) ---
-    const championTags = {};
-    [
-      {"name": "Aatrox", "title": "the Darkin Blade", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Ahri", "title": "the Nine-Tailed Fox", "tags": ["Mage", "Assassin"], "scores": {"engage": 3, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Akali", "title": "the Rogue Assassin", "tags": ["Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Camille", "title": "the Steel Shadow", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Fiora", "title": "the Grand Duelist", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Jinx", "title": "the Loose Cannon", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Thresh", "title": "the Chain Warden", "tags": ["Support", "Tank"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Lee Sin", "title": "the Blind Monk", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Ornn", "title": "The Fire below the Mountain", "tags": ["Tank"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 2}},
-      {"name": "Gwen", "title": "The Hallowed Seamstress", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Jax", "title": "Grandmaster at Arms", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Viego", "title": "The Ruined King", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Lillia", "title": "the Bashful Bloom", "tags": ["Fighter", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Syndra", "title": "the Dark Sovereign", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Lucian", "title": "the Purifier", "tags": ["Marksman", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Seraphine", "title": "the Starry-Eyed Songstress", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Cassiopeia", "title": "the Serpent's Embrace", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Zed", "title": "the Master of Shadows", "tags": ["Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "LeBlanc", "title": "the Deceiver", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Kai'Sa", "title": "Daughter of the Void", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Miss Fortune", "title": "the Bounty Hunter", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 2, "teamfight": 1}},
-      {"name": "Braum", "title": "the Heart of the Freljord", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 2}},
-      {"name": "Hwei", "title": "the Visionary", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Velkoz", "title": "the Eye of the Void", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Milio", "title": "The Gentle Flame", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Renata", "title": "the Chem-Baroness", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Gragas", "title": "the Rabble Rouser", "tags": ["Fighter", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 2}},
-      {"name": "Rell", "title": "the Iron Maiden", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Tahm Kench", "title": "The River King", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Nautilus", "title": "the Titan of the Depths", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Leona", "title": "the Radiant Dawn", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Lulu", "title": "the Fae Sorceress", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Soraka", "title": "the Starchild", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Janna", "title": "the Storm's Fury", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Karma", "title": "the Enlightened One", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Pyke", "title": "the Bloodharbor Ripper", "tags": ["Support", "Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Pantheon", "title": "the Unbreakable Spear", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Xerath", "title": "the Magus Ascendant", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Blitzcrank", "title": "the Great Steam Golem", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 2}}
-    ].forEach(champ => {
-      championTags[champ.name] = champ;
+    // Champion data will be loaded from Data Dragon
+    // Custom synergy scores and lane info
+    const customChampionData = {
+      Aatrox: { scores: { engage: 2, poke: 1, cc: 1, teamfight: 1 }, lanes: ["top"] },
+      Ahri: { scores: { engage: 3, poke: 2, cc: 1, teamfight: 1 }, lanes: ["mid"] },
+      Akali: { scores: { engage: 2, poke: 1, cc: 1, teamfight: 1 }, lanes: ["mid", "top"] },
+      Camille: { scores: { engage: 3, poke: 1, cc: 1, teamfight: 1 }, lanes: ["top"] },
+      Fiora: { scores: { engage: 3, poke: 1, cc: 2, teamfight: 1 }, lanes: ["top"] },
+      Jinx: { scores: { engage: 1, poke: 2, cc: 1, teamfight: 1 }, lanes: ["adc"] },
+      Thresh: { scores: { engage: 2, poke: 1, cc: 3, teamfight: 1 }, lanes: ["support"] },
+      LeeSin: { scores: { engage: 3, poke: 1, cc: 2, teamfight: 1 }, lanes: ["jungle"] },
+      Ornn: { scores: { engage: 2, poke: 1, cc: 2, teamfight: 2 }, lanes: ["top"] },
+      Gwen: { scores: { engage: 2, poke: 1, cc: 1, teamfight: 1 }, lanes: ["top"] },
+      Jax: { scores: { engage: 2, poke: 1, cc: 1, teamfight: 1 }, lanes: ["top"] },
+      Viego: { scores: { engage: 3, poke: 1, cc: 1, teamfight: 1 }, lanes: ["jungle"] },
+      Lillia: { scores: { engage: 2, poke: 2, cc: 1, teamfight: 1 }, lanes: ["jungle"] },
+      Syndra: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["mid"] },
+      Lucian: { scores: { engage: 2, poke: 2, cc: 1, teamfight: 1 }, lanes: ["adc", "mid"] },
+      Seraphine: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support", "mid"] },
+      Cassiopeia: { scores: { engage: 1, poke: 2, cc: 1, teamfight: 1 }, lanes: ["mid"] },
+      Zed: { scores: { engage: 2, poke: 1, cc: 1, teamfight: 1 }, lanes: ["mid"] },
+      Leblanc: { scores: { engage: 2, poke: 2, cc: 1, teamfight: 1 }, lanes: ["mid"] },
+      Kaisa: { scores: { engage: 1, poke: 3, cc: 1, teamfight: 1 }, lanes: ["adc"] },
+      MissFortune: { scores: { engage: 1, poke: 3, cc: 2, teamfight: 1 }, lanes: ["adc"] },
+      Braum: { scores: { engage: 2, poke: 1, cc: 3, teamfight: 2 }, lanes: ["support"] },
+      Hwei: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support", "mid"] },
+      Velkoz: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support", "mid"] },
+      Milio: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support"] },
+      Renata: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support"] },
+      Gragas: { scores: { engage: 2, poke: 2, cc: 1, teamfight: 2 }, lanes: ["top", "jungle"] },
+      Rell: { scores: { engage: 2, poke: 1, cc: 3, teamfight: 1 }, lanes: ["support"] },
+      TahmKench: { scores: { engage: 2, poke: 1, cc: 3, teamfight: 1 }, lanes: ["support", "top"] },
+      Nautilus: { scores: { engage: 2, poke: 1, cc: 3, teamfight: 1 }, lanes: ["support"] },
+      Leona: { scores: { engage: 2, poke: 1, cc: 3, teamfight: 1 }, lanes: ["support"] },
+      Lulu: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support"] },
+      Soraka: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support"] },
+      Janna: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support"] },
+      Karma: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["support", "mid"] },
+      Pyke: { scores: { engage: 2, poke: 1, cc: 2, teamfight: 1 }, lanes: ["support"] },
+      Pantheon: { scores: { engage: 3, poke: 2, cc: 1, teamfight: 1 }, lanes: ["top", "support"] },
+      Xerath: { scores: { engage: 1, poke: 2, cc: 2, teamfight: 1 }, lanes: ["mid", "support"] },
+      Blitzcrank: { scores: { engage: 2, poke: 1, cc: 3, teamfight: 2 }, lanes: ["support"] }
+    };
+    let championTags = {};
+    async function fetchChampionData() {
+      // Get latest version
+      const versionResp = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+      const versions = await versionResp.json();
+      const latestVersion = versions[0];
+      // Get champion data
+      const champResp = await fetch(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/champion.json`);
+      const champData = await champResp.json();
+      // Convert Data Dragon format to championTags format
+      Object.entries(champData.data).forEach(([key, champ]) => {
+        championTags[key] = {
+          name: champ.name,
+          title: champ.title,
+          tags: champ.tags,
+          // Data Dragon does not provide scores/lanes, so fallback to empty/defaults
+          scores: { engage: 1, poke: 1, cc: 1, teamfight: 1 },
+          lanes: []
+        };
+      });
+      // After loading Data Dragon, merge custom scores/lanes
+      Object.entries(customChampionData).forEach(([key, custom]) => {
+        if (championTags[key]) {
+          championTags[key].scores = custom.scores;
+          championTags[key].lanes = custom.lanes;
+        }
+      });
+      // Debug: log all loaded champion keys
+      setTimeout(() => {
+        console.log('Loaded champion keys from Data Dragon:', Object.keys(championTags));
+        document.dispatchEvent(new Event('championDataLoaded'));
+      }, 2000);
+    }
+    // Fetch champion data on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchChampionData();
+      document.addEventListener('championDataLoaded', () => {
+        showRecommendedComps();
+        // If you have other comp rendering logic, call it here too
+      });
     });
 
     // --- Champion pools ---
@@ -293,21 +332,57 @@
 
     // --- Synergy scoring ---
     function getSynergyScores(champName) {
-      const champ = championTags[champName];
-      if (!champ) return { engage: 1, poke: 1, cc: 1, teamfight: 1, breakdown: 'Unknown champion' };
-      let { engage, poke, cc, teamfight } = champ.scores;
+  // Debug: log normalized lookup key
+      function normalizeName(name) {
+        // Remove non-alphanumerics, then camel case
+        return name
+          .toLowerCase()
+          .replace(/[^a-z0-9 ]/g, ' ') // replace non-alphanumerics with space
+          .split(' ')
+          .filter(Boolean)
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+          .join('');
+      }
+      const lookupKey = normalizeName(champName);
+      console.log(`Looking up champion: '${champName}' as key: '${lookupKey}'`);
+      let champ = championTags[champName] || championTags[lookupKey];
+      if (!champ) {
+        // Try case-insensitive match against all keys
+        const foundKey = Object.keys(championTags).find(k => k.toLowerCase() === lookupKey.toLowerCase());
+        console.log(`Case-insensitive search for '${lookupKey}' found:`, foundKey);
+        if (foundKey) champ = championTags[foundKey];
+      }
+      if (!champ) {
+        console.log(`Champion '${champName}' not found. Lookup key: '${lookupKey}'. All keys:`, Object.keys(championTags));
+        return { engage: 1, poke: 1, cc: 1, teamfight: 1, breakdown: `<div class='warning'>${champName}: Not found in Data Dragon</div>` };
+      }
+      // Use scores if present, else default
+      let engage = champ.scores?.engage ?? 1;
+      let poke = champ.scores?.poke ?? 1;
+      let cc = champ.scores?.cc ?? 1;
+      let teamfight = champ.scores?.teamfight ?? 1;
       const tags = champ.tags || [];
+      // Lane bonus/penalty
+      let laneBonus = 0;
+      if (typeof arguments[1] === 'string') {
+        const lane = arguments[1];
+        if (champ.lanes && champ.lanes.includes(lane)) {
+          laneBonus = 1; // Bonus for primary lane
+        } else if (champ.lanes && champ.lanes.length > 0) {
+          laneBonus = -3; // Strong penalty for off-role
+        }
+      }
       if (tags.length > 1) {
         engage += 1;
         poke += 1;
         cc += 1;
         teamfight += 1;
       }
-      engage = Math.min(engage, 5);
-      poke = Math.min(poke, 5);
-      cc = Math.min(cc, 5);
-      teamfight = Math.min(teamfight, 5);
-      const breakdown = `<div><b>${champName}</b>: Engage ${engage}, Poke ${poke}, CC ${cc}, Teamfight ${teamfight}</div>`;
+      engage = Math.min(engage + laneBonus, 5);
+      poke = Math.min(poke + laneBonus, 5);
+      cc = Math.min(cc + laneBonus, 5);
+      teamfight = Math.min(teamfight + laneBonus, 5);
+  const breakdown = `<div><b>${champName}</b>: Engage ${engage}, Poke ${poke}, CC ${cc}, Teamfight ${teamfight}${laneBonus === 1 ? " <span style='color:#43b581'>(Primary Lane)</span>" : laneBonus === -1 ? " <span style='color:#faa61a'>(Off-role)</span>" : ''}</div>`;
       return { engage, poke, cc, teamfight, breakdown };
     }
 
@@ -354,7 +429,9 @@
             breakdown += `<div class='warning'>${champ} is banned!</div>`;
             return;
           }
-          const s = getSynergyScores(champ);
+          // Pass lane info to scoring
+          const lane = ['top','jungle','mid','adc','support'][i];
+          const s = getSynergyScores(champ, lane);
           scores.engage += s.engage;
           scores.poke += s.poke;
           scores.cc += s.cc;
