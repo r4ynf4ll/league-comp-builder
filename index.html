@@ -281,7 +281,7 @@
       fetchChampionData();
       document.addEventListener('championDataLoaded', () => {
         showRecommendedComps();
-        // If you have other comp rendering logic, call it here too
+        renderCounterComp();
       });
     });
 
@@ -345,7 +345,7 @@
       }
       const lookupKey = normalizeName(champName);
       console.log(`Looking up champion: '${champName}' as key: '${lookupKey}'`);
-      let champ = championTags[champName] || championTags[lookupKey];
+      let champ = championTags[lookupKey];
       if (!champ) {
         // Try case-insensitive match against all keys
         const foundKey = Object.keys(championTags).find(k => k.toLowerCase() === lookupKey.toLowerCase());
@@ -438,7 +438,12 @@
           scores.teamfight += s.teamfight;
           breakdown += s.breakdown;
         });
-        let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
+  // Clamp scores to maxScore
+  scores.engage = Math.min(scores.engage, maxScore.engage);
+  scores.poke = Math.min(scores.poke, maxScore.poke);
+  scores.cc = Math.min(scores.cc, maxScore.cc);
+  scores.teamfight = Math.min(scores.teamfight, maxScore.teamfight);
+  let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
         const card = document.createElement('div');
         card.className = 'comp-card';
   card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${breakdown}`;
@@ -453,14 +458,20 @@
             breakdown += `<div class='warning'>${champ} is banned!</div>`;
             return;
           }
-          const s = getSynergyScores(champ);
+          const lane = ['top','jungle','mid','adc','support'][i];
+          const s = getSynergyScores(champ, lane);
           scores.engage += s.engage;
           scores.poke += s.poke;
           scores.cc += s.cc;
           scores.teamfight += s.teamfight;
           breakdown += s.breakdown;
         });
-        let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
+  // Clamp scores to maxScore
+  scores.engage = Math.min(scores.engage, maxScore.engage);
+  scores.poke = Math.min(scores.poke, maxScore.poke);
+  scores.cc = Math.min(scores.cc, maxScore.cc);
+  scores.teamfight = Math.min(scores.teamfight, maxScore.teamfight);
+  let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
         const card = document.createElement('div');
         card.className = 'comp-card';
   card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${breakdown}`;
@@ -516,7 +527,9 @@
       let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
       let breakdown = '';
       counterComp.forEach((champ, i) => {
-        const s = getSynergyScores(champ);
+    const lane = ['top','jungle','mid','adc','support'][i];
+    console.log(`Counter Comp: Looking up champion '${champ}' for lane '${lane}'`);
+    const s = getSynergyScores(champ, lane);
         scores.engage += s.engage;
         scores.poke += s.poke;
         scores.cc += s.cc;
@@ -555,7 +568,8 @@
           breakdown += `<div class='warning'>${champ} is banned!</div>`;
           return;
         }
-        const s = getSynergyScores(champ);
+        const lane = ['top','jungle','mid','adc','support'][i];
+        const s = getSynergyScores(champ, lane);
         scores.engage += s.engage;
         scores.poke += s.poke;
         scores.cc += s.cc;
@@ -598,6 +612,94 @@
     updateBanList();
     showRecommendedComps();
     renderCounterComp();
+  </script>
+  <script>
+    // Find highest scoring comp from custom data
+    function findHighestScoringComp() {
+      const lanes = ['top','jungle','mid','adc','support'];
+      // Use only champions from your pools for each lane
+      const poolNames = lanes.map(lane => {
+        const pool = championPools[lane];
+        return [...(pool.S || []), ...(pool.A || []), ...(pool.Counters || [])];
+      });
+      // Get champion objects for each pool
+      const candidates = poolNames.map((names, i) => {
+        return names
+          .map(name => {
+            // Normalize name for lookup
+            function normalizeName(n) {
+              return n.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            }
+            // Find matching champion in championTags
+            return Object.values(championTags).find(champ => normalizeName(champ.name) === normalizeName(name));
+          })
+          .filter(Boolean);
+      });
+      // Generate all possible comps
+      let allComps = [];
+      function getCompScore(comp) {
+        let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
+        let breakdown = '';
+        comp.forEach((champ, i) => {
+          const lane = lanes[i];
+          const s = getSynergyScores(champ.name, lane);
+          scores.engage += s.engage;
+          scores.poke += s.poke;
+          scores.cc += s.cc;
+          scores.teamfight += s.teamfight;
+          breakdown += s.breakdown;
+        });
+        // Clamp scores
+        scores.engage = Math.min(scores.engage, 20);
+        scores.poke = Math.min(scores.poke, 20);
+        scores.cc = Math.min(scores.cc, 20);
+        scores.teamfight = Math.min(scores.teamfight, 20);
+        let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
+        return { total, scores, breakdown };
+      }
+      for (let top of candidates[0]) {
+        for (let jungle of candidates[1]) {
+          if (jungle.name === top.name) continue;
+          for (let mid of candidates[2]) {
+            if ([top.name, jungle.name].includes(mid.name)) continue;
+            for (let adc of candidates[3]) {
+              if ([top.name, jungle.name, mid.name].includes(adc.name)) continue;
+              for (let support of candidates[4]) {
+                if ([top.name, jungle.name, mid.name, adc.name].includes(support.name)) continue;
+                const comp = [top, jungle, mid, adc, support];
+                const { total, scores, breakdown } = getCompScore(comp);
+                allComps.push({ comp, scores, breakdown, total });
+              }
+            }
+          }
+        }
+      }
+      // Sort all comps by score descending
+      allComps.sort((a, b) => b.total - a.total);
+      let currentIdx = 0;
+      // Render function
+      function renderComp(idx) {
+        let main = document.querySelector('main');
+        let old = document.getElementById('highest-comp-section');
+        if (old) old.remove();
+        let section = document.createElement('section');
+        section.id = 'highest-comp-section';
+        section.style.marginTop = '2em';
+        let bestComp = allComps[idx];
+        section.innerHTML = `<h2 style='color:#43b581;'>Highest Scoring Comp</h2>` +
+          bestComp.comp.map((champ, i) => `<span class='champion'>${champ.name}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join(' | ') +
+          `<hr><b>Synergy Scores:</b><br>Engage: ${bestComp.scores.engage}/20, Poke: ${bestComp.scores.poke}/20, CC: ${bestComp.scores.cc}/20, Teamfight: ${bestComp.scores.teamfight}/20<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${bestComp.total}/80</span><hr>${bestComp.breakdown}` +
+          `<button id='next-comp-btn' style='margin-top:1em; padding:0.7em 1.5em; font-size:1.1em; background:#43b581; color:#181a20; border-radius:8px; border:2px solid #c89b3c; cursor:pointer;'>Show Next Highest Comp</button>`;
+        main.appendChild(section);
+        document.getElementById('next-comp-btn').onclick = function() {
+          currentIdx = (currentIdx + 1) % allComps.length;
+          renderComp(currentIdx);
+        };
+      }
+      // Initial render
+      renderComp(currentIdx);
+    }
+    document.addEventListener('championDataLoaded', findHighestScoringComp);
   </script>
 </body>
 </html>
