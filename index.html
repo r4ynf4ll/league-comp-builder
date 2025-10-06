@@ -118,8 +118,10 @@
 <body>
   <header>League Comp Builder</header>
   <div style="text-align:center; margin-top:1rem; margin-bottom:2rem; font-size:1.2rem; color:#f7b731;">
-    <b>Team Playstyle Advice:</b><br>
-    Your team has strong individual fighters in solo lanes, a low-resource jungler, a roaming support, and an ADC who prefers to farm and scale.
+    <div style="display:inline-block; background:rgba(20,24,38,0.95); border-radius:10px; padding:1rem 2rem; border:2px solid #c89b3c; color:#f7b731; font-size:1.2rem;">
+      <b>Team Playstyle Advice:</b><br>
+      Play through your strong solo lanes by enabling them to win 1v1s and pressure the map. Let your low-resource jungler focus on efficient farming and supporting lanes when needed. Use your roaming support to create vision and help set up plays across the map. Allow your ADC to farm safely and scale for late-game teamfights. Prioritize lane pressure, map control, and coordinated roams to maximize your strengths.
+    </div>
   </div>
   <main>
     <section id="ban-section">
@@ -252,9 +254,9 @@
         Counters: ["Poppy", "Cho'Gath", "Renekton", "Jayce", "Pantheon"]
       },
       jungle: {
-        S: ['Viego', 'Lillia'],
-        A: ['Kha\'Zix', 'Lee Sin', 'Sejuani', 'Graves', 'Jarvan IV', 'Wukong', 'Nidalee', 'Nocturne', 'Rengar', 'Elise', 'Vi', 'Xin Zhao', 'Kindred', 'Hecarim', 'Evelynn', 'Shaco', 'Rammus', 'Zac', 'Poppy', 'Maokai', 'Amumu'],
-        Counters: []
+        S: ['Viego', 'Jarvan', 'Lillia', 'Maokai'],
+        A: ['Karthus', 'Zyra', 'Sejuani', 'Dr. Mundo', 'Elise', 'Kha Zix', 'Diana', 'Trundle'],
+        Counters: ['Ivern', 'Jax', 'Rammus', 'Morgana', 'Taliyah', 'Zac', 'Kayn']
       },
       mid: {
         S: ['Ahri', 'Akali', 'Syndra', 'Lucian'],
@@ -316,22 +318,38 @@
       diveList.innerHTML = '';
       pokeList.innerHTML = '';
       const lanes = ['Top','Jungle','Mid','ADC','Support'];
-      // Example recommended comps
+      // 5 recommended comps for each type
       const diveComps = [
         ['Camille','Viego','Akali','Jinx','Thresh'],
         ['Fiora','Lee Sin','Syndra','Jinx','Leona'],
-        ['Ornn','Viego','Lucian','Jinx','Thresh']
+        ['Ornn','Viego','Lucian','Jinx','Thresh'],
+        ['Gwen','Viego','Akali','Jinx','Braum'],
+        ['Jax','Lee Sin','Syndra','Jinx','Thresh']
       ];
       const pokeComps = [
         ['Gwen','Lillia','Seraphine','Kai\'Sa','Lulu'],
         ['Jax','Viego','Cassiopeia','Miss Fortune','Soraka'],
-        ['Camille','Lillia','LeBlanc','Jinx','Janna']
+        ['Camille','Lillia','LeBlanc','Jinx','Janna'],
+        ['Ornn','Lillia','Syndra','Kai\'Sa','Lulu'],
+        ['Fiora','Viego','Seraphine','Miss Fortune','Soraka']
       ];
       const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
+      function getValidComp(comp) {
+        // Replace banned champs with next best available from pools
+        const lanes = ['top','jungle','mid','adc','support'];
+        return comp.map((champ, i) => {
+          if (!bannedChamps.includes(champ.toLowerCase())) return champ;
+          // Find replacement from pool
+          const pool = championPools[lanes[i]];
+          const allChoices = [...pool.S, ...pool.A, ...(pool.Counters||[])].filter(c => !bannedChamps.includes(c.toLowerCase()) && !comp.includes(c));
+          return allChoices[0] || 'Any';
+        });
+      }
       diveComps.forEach((comp, idx) => {
+        const validComp = getValidComp(comp);
         let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
         let breakdown = '';
-        comp.forEach((champ, i) => {
+        validComp.forEach((champ, i) => {
           if (bannedChamps.includes(champ.toLowerCase())) {
             breakdown += `<div class='warning'>${champ} is banned!</div>`;
             return;
@@ -346,13 +364,14 @@
         let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
         const card = document.createElement('div');
         card.className = 'comp-card';
-        card.innerHTML = `<b>Comp ${idx+1}</b><br>` + comp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall:</b> ${total}/${maxScore.overall}<br>${breakdown}`;
+  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${breakdown}`;
         diveList.appendChild(card);
       });
       pokeComps.forEach((comp, idx) => {
+        const validComp = getValidComp(comp);
         let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
         let breakdown = '';
-        comp.forEach((champ, i) => {
+        validComp.forEach((champ, i) => {
           if (bannedChamps.includes(champ.toLowerCase())) {
             breakdown += `<div class='warning'>${champ} is banned!</div>`;
             return;
@@ -367,7 +386,7 @@
         let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
         const card = document.createElement('div');
         card.className = 'comp-card';
-        card.innerHTML = `<b>Comp ${idx+1}</b><br>` + comp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall:</b> ${total}/${maxScore.overall}<br>${breakdown}`;
+  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${breakdown}`;
         pokeList.appendChild(card);
       });
     }
@@ -502,522 +521,6 @@
     updateBanList();
     showRecommendedComps();
     renderCounterComp();
-  </script>
-</body>
-</html>
-      scores.poke += s.poke;
-      scores.cc += s.cc;
-      scores.teamfight += s.teamfight;
-      breakdown += s.breakdown;
-    });
-    let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
-    const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
-    let html = `<h3>Suggested Counter Comp</h3><div class='comp-list'>`;
-    counterComp.forEach((champ, i) => {
-      html += `<div class='comp-card'><span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span></div>`;
-    });
-    html += `</div><hr><b>Synergy Breakdown:</b><br>${breakdown}<br><b>Total Scores:</b> Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall Score:</b> ${total}/${maxScore.overall}`;
-    document.getElementById('counter-comp-result').innerHTML = html;
-  }
-
-  document.getElementById('ban-form').onsubmit = function(e) {
-    e.preventDefault();
-    updateBanList();
-    showRecommendedComps();
-    renderCounterComp();
-  };
-  document.getElementById('refresh-bans').onclick = function() {
-    document.getElementById('ban1').value = '';
-    document.getElementById('ban2').value = '';
-    document.getElementById('ban3').value = '';
-    document.getElementById('ban4').value = '';
-    document.getElementById('ban5').value = '';
-    updateBanList();
-    showRecommendedComps();
-    renderCounterComp();
-  };
-  document.getElementById('opponent-form').onsubmit = function(e) {
-    e.preventDefault();
-    renderCounterComp();
-  };
-  document.getElementById('manual-form').onsubmit = function(e) {
-    e.preventDefault();
-    // ...existing manual comp builder logic...
-  };
-  // Initial render on page load
-  showRecommendedComps();
-  renderCounterComp();
-});
-          S: pool.S.filter(c => !bannedChamps.includes(c.toLowerCase())),
-          A: pool.A.filter(c => !bannedChamps.includes(c.toLowerCase())),
-          Counters: pool.Counters ? pool.Counters.filter(c => !bannedChamps.includes(c.toLowerCase())) : []
-        };
-      }
-      const filteredPools = {
-        top: getFilteredPool(championPools.top),
-        jungle: getFilteredPool(championPools.jungle),
-        mid: getFilteredPool(championPools.mid),
-        adc: getFilteredPool(championPools.adc),
-        support: getFilteredPool(championPools.support)
-      };
-      function pickCounter(pool, opp) {
-        if (!opp) {
-          let sChoices = pool.S;
-          let aChoices = pool.A;
-          return sChoices[0] || aChoices[0] || 'Any';
-        }
-        let countersChoices = pool.Counters.filter(c => c.toLowerCase() !== opp);
-        if (countersChoices.length > 0) return countersChoices[0];
-        let sChoices = pool.S.filter(c => c.toLowerCase() !== opp);
-        if (sChoices.length > 0) return sChoices[0];
-        let aChoices = pool.A.filter(c => c.toLowerCase() !== opp);
-        if (aChoices.length > 0) return aChoices[0];
-        let allChoices = [...pool.S, ...pool.A, ...pool.Counters].filter(c => c.toLowerCase() !== opp);
-        if (allChoices.length > 0) return allChoices[0];
-        return pool.S[0] || pool.A[0] || pool.Counters[0] || 'Any';
-      }
-      const counterComp = [
-        pickCounter(filteredPools.top, oppTop),
-        pickCounter(filteredPools.jungle, oppJungle),
-        pickCounter(filteredPools.mid, oppMid),
-        pickCounter(filteredPools.adc, oppADC),
-        pickCounter(filteredPools.support, oppSupport)
-      ];
-      const lanes = ['Top','Jungle','Mid','ADC','Support'];
-      let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
-      let breakdown = '';
-      counterComp.forEach((champ, i) => {
-        const s = getSynergyScores(champ);
-        scores.engage += s.engage;
-        scores.poke += s.poke;
-        scores.cc += s.cc;
-        scores.teamfight += s.teamfight;
-        breakdown += s.breakdown;
-      });
-      let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
-      const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
-      let html = `<h3>Suggested Counter Comp</h3><div class='comp-list'>`;
-      counterComp.forEach((champ, i) => {
-        html += `<div class='comp-card'><span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span></div>`;
-      });
-      html += `</div><hr><b>Synergy Breakdown:</b><br>${breakdown}<br><b>Total Scores:</b> Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall Score:</b> ${total}/${maxScore.overall}`;
-      document.getElementById('counter-comp-result').innerHTML = html;
-    }
-    // --- Counter Comp Rendering Function ---
-    function renderCounterComp() {
-      const oppTop = document.getElementById('opp-top').value.trim().toLowerCase();
-      const oppJungle = document.getElementById('opp-jungle').value.trim().toLowerCase();
-      const oppMid = document.getElementById('opp-mid').value.trim().toLowerCase();
-      const oppADC = document.getElementById('opp-adc').value.trim().toLowerCase();
-      const oppSupport = document.getElementById('opp-support').value.trim().toLowerCase();
-      function getFilteredPool(pool) {
-        return {
-          S: pool.S.filter(c => !bannedChamps.includes(c.toLowerCase())),
-          A: pool.A.filter(c => !bannedChamps.includes(c.toLowerCase())),
-          Counters: pool.Counters ? pool.Counters.filter(c => !bannedChamps.includes(c.toLowerCase())) : []
-        };
-      }
-      const filteredPools = {
-        top: getFilteredPool(championPools.top),
-        jungle: getFilteredPool(championPools.jungle),
-        mid: getFilteredPool(championPools.mid),
-        adc: getFilteredPool(championPools.adc),
-        support: getFilteredPool(championPools.support)
-      };
-      function pickCounter(pool, opp) {
-        if (!opp) {
-          let sChoices = pool.S;
-          let aChoices = pool.A;
-          return sChoices[0] || aChoices[0] || 'Any';
-        }
-        let countersChoices = pool.Counters.filter(c => c.toLowerCase() !== opp);
-        if (countersChoices.length > 0) return countersChoices[0];
-        let sChoices = pool.S.filter(c => c.toLowerCase() !== opp);
-        if (sChoices.length > 0) return sChoices[0];
-        let aChoices = pool.A.filter(c => c.toLowerCase() !== opp);
-        if (aChoices.length > 0) return aChoices[0];
-        let allChoices = [...pool.S, ...pool.A, ...pool.Counters].filter(c => c.toLowerCase() !== opp);
-        if (allChoices.length > 0) return allChoices[0];
-        return pool.S[0] || pool.A[0] || pool.Counters[0] || 'Any';
-      }
-      const counterComp = [
-        pickCounter(filteredPools.top, oppTop),
-        pickCounter(filteredPools.jungle, oppJungle),
-        pickCounter(filteredPools.mid, oppMid),
-        pickCounter(filteredPools.adc, oppADC),
-        pickCounter(filteredPools.support, oppSupport)
-      ];
-      const lanes = ['Top','Jungle','Mid','ADC','Support'];
-      let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
-      let breakdown = '';
-      counterComp.forEach((champ, i) => {
-        const s = getSynergyScores(champ);
-        scores.engage += s.engage;
-        scores.poke += s.poke;
-        scores.cc += s.cc;
-        scores.teamfight += s.teamfight;
-        breakdown += s.breakdown;
-      });
-      let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
-      const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
-      let html = `<h3>Suggested Counter Comp</h3><div class='comp-list'>`;
-      counterComp.forEach((champ, i) => {
-        html += `<div class='comp-card'><span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span></div>`;
-      });
-      html += `</div><hr><b>Synergy Breakdown:</b><br>${breakdown}<br><b>Total Scores:</b> Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall Score:</b> ${total}/${maxScore.overall}`;
-      document.getElementById('counter-comp-result').innerHTML = html;
-    }
-    // Move event listeners inside DOMContentLoaded for reliability
-    document.getElementById('ban-form').onsubmit = function(e) {
-      e.preventDefault();
-  updateBanList();
-  renderCounterComp();
-  renderCounterComp();
-    };
-    document.getElementById('refresh-bans').onclick = function() {
-      document.getElementById('ban1').value = '';
-      document.getElementById('ban2').value = '';
-      document.getElementById('ban3').value = '';
-      document.getElementById('ban4').value = '';
-      document.getElementById('ban5').value = '';
-  updateBanList();
-  renderCounterComp();
-  renderCounterComp();
-    };
-    // --- Champion tags for synergy scoring (auto-generated from champion_tags.json) ---
-    // Full championTags object generated from champion_tags.json
-    let championTags = {};
-    [
-      {"name": "Aatrox", "title": "the Darkin Blade", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Ahri", "title": "the Nine-Tailed Fox", "tags": ["Mage", "Assassin"], "scores": {"engage": 3, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Akali", "title": "the Rogue Assassin", "tags": ["Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Akshan", "title": "the Rogue Sentinel", "tags": ["Marksman", "Assassin"], "scores": {"engage": 3, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Alistar", "title": "the Minotaur", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 4, "teamfight": 1}},
-      {"name": "Ambessa", "title": "Matriarch of War", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Amumu", "title": "the Sad Mummy", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Anivia", "title": "the Cryophoenix", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Annie", "title": "the Dark Child", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Aphelios", "title": "the Weapon of the Faithful", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Ashe", "title": "the Frost Archer", "tags": ["Marksman", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 2}},
-      {"name": "Aurelion Sol", "title": "The Star Forger", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Aurora", "title": "the Witch Between Worlds", "tags": ["Mage", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Azir", "title": "the Emperor of the Sands", "tags": ["Mage", "Marksman"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Bard", "title": "the Wandering Caretaker", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Bel'Veth", "title": "the Empress of the Void", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Blitzcrank", "title": "the Great Steam Golem", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 2}},
-      {"name": "Brand", "title": "the Burning Vengeance", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Braum", "title": "the Heart of the Freljord", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 2}},
-      {"name": "Briar", "title": "the Restrained Hunger", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Caitlyn", "title": "the Sheriff of Piltover", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Camille", "title": "the Steel Shadow", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Cassiopeia", "title": "the Serpent's Embrace", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Cho'Gath", "title": "the Terror of the Void", "tags": ["Tank", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Corki", "title": "the Daring Bombardier", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 4, "cc": 1, "teamfight": 1}},
-      {"name": "Darius", "title": "the Hand of Noxus", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Diana", "title": "Scorn of the Moon", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Draven", "title": "the Glorious Executioner", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Dr. Mundo", "title": "the Madman of Zaun", "tags": ["Tank", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Ekko", "title": "the Boy Who Shattered Time", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Elise", "title": "the Spider Queen", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Evelynn", "title": "Agony's Embrace", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Ezreal", "title": "the Prodigal Explorer", "tags": ["Marksman", "Mage"], "scores": {"engage": 2, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Fiddlesticks", "title": "the Ancient Fear", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 3, "teamfight": 2}},
-      {"name": "Fiora", "title": "the Grand Duelist", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Fizz", "title": "the Tidal Trickster", "tags": ["Assassin", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Galio", "title": "the Colossus", "tags": ["Tank", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Gangplank", "title": "the Saltwater Scourge", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Garen", "title": "The Might of Demacia", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Gnar", "title": "the Missing Link", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 2}},
-      {"name": "Gragas", "title": "the Rabble Rouser", "tags": ["Fighter", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 2}},
-      {"name": "Graves", "title": "the Outlaw", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Gwen", "title": "The Hallowed Seamstress", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Hecarim", "title": "the Shadow of War", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Heimerdinger", "title": "the Revered Inventor", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Hwei", "title": "the Visionary", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Illaoi", "title": "the Kraken Priestess", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Irelia", "title": "the Blade Dancer", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Ivern", "title": "the Green Father", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Janna", "title": "the Storm's Fury", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Jarvan IV", "title": "the Exemplar of Demacia", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Jax", "title": "Grandmaster at Arms", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Jayce", "title": "the Defender of Tomorrow", "tags": ["Fighter", "Marksman"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 2}},
-      {"name": "Jhin", "title": "the Virtuoso", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Jinx", "title": "the Loose Cannon", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Kai'Sa", "title": "Daughter of the Void", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Kalista", "title": "the Spear of Vengeance", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Karma", "title": "the Enlightened One", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Karthus", "title": "the Deathsinger", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Kassadin", "title": "the Void Walker", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Katarina", "title": "the Sinister Blade", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Kayle", "title": "the Righteous", "tags": ["Mage", "Marksman"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Kayn", "title": "the Shadow Reaper", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Kennen", "title": "the Heart of the Tempest", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Kha'Zix", "title": "the Voidreaver", "tags": ["Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Kindred", "title": "The Eternal Hunters", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Kled", "title": "the Cantankerous Cavalier", "tags": ["Fighter"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Kog'Maw", "title": "the Mouth of the Abyss", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "K'Sante", "title": "the Pride of Nazumah", "tags": ["Tank", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "LeBlanc", "title": "the Deceiver", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Lee Sin", "title": "the Blind Monk", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Leona", "title": "the Radiant Dawn", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Lillia", "title": "the Bashful Bloom", "tags": ["Fighter", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Lissandra", "title": "the Ice Witch", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Lucian", "title": "the Purifier", "tags": ["Marksman", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Lulu", "title": "the Fae Sorceress", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Lux", "title": "the Lady of Luminosity", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 3, "teamfight": 1}},
-      {"name": "Malphite", "title": "Shard of the Monolith", "tags": ["Tank", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 2, "teamfight": 2}},
-      {"name": "Malzahar", "title": "the Prophet of the Void", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Maokai", "title": "the Twisted Treant", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Master Yi", "title": "the Wuju Bladesman", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Mel", "title": "the Soul's Reflection", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Milio", "title": "The Gentle Flame", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Miss Fortune", "title": "the Bounty Hunter", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 2, "teamfight": 1}},
-      {"name": "Wukong", "title": "the Monkey King", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Mordekaiser", "title": "the Iron Revenant", "tags": ["Fighter", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Morgana", "title": "the Fallen", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Naafiri", "title": "the Hound of a Hundred Bites", "tags": ["Assassin", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Nami", "title": "the Tidecaller", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Nasus", "title": "the Curator of the Sands", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Nautilus", "title": "the Titan of the Depths", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Neeko", "title": "the Curious Chameleon", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 3, "cc": 2, "teamfight": 1}},
-      {"name": "Nidalee", "title": "the Bestial Huntress", "tags": ["Assassin", "Mage"], "scores": {"engage": 2, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Nilah", "title": "the Joy Unbound", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Nocturne", "title": "the Eternal Nightmare", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Nunu & Willump", "title": "the Boy and His Yeti", "tags": ["Tank", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 3, "teamfight": 1}},
-      {"name": "Olaf", "title": "the Berserker", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Orianna", "title": "the Lady of Clockwork", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Ornn", "title": "The Fire below the Mountain", "tags": ["Tank"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 2}},
-      {"name": "Pantheon", "title": "the Unbreakable Spear", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Poppy", "title": "Keeper of the Hammer", "tags": ["Tank", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Pyke", "title": "the Bloodharbor Ripper", "tags": ["Support", "Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Qiyana", "title": "Empress of the Elements", "tags": ["Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 2}},
-      {"name": "Quinn", "title": "Demacia's Wings", "tags": ["Marksman", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Rakan", "title": "The Charmer", "tags": ["Support"], "scores": {"engage": 1, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Rammus", "title": "the Armordillo", "tags": ["Tank"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Rek'Sai", "title": "the Void Burrower", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Rell", "title": "the Iron Maiden", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Renata Glasc", "title": "the Chem-Baroness", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Renekton", "title": "the Butcher of the Sands", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Rengar", "title": "the Pridestalker", "tags": ["Assassin", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Riven", "title": "the Exile", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Rumble", "title": "the Mechanized Menace", "tags": ["Fighter", "Mage"], "scores": {"engage": 2, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Ryze", "title": "the Rune Mage", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Samira", "title": "the Desert Rose", "tags": ["Marksman", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Sejuani", "title": "Fury of the North", "tags": ["Tank"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Senna", "title": "the Redeemer", "tags": ["Support", "Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Seraphine", "title": "the Starry-Eyed Songstress", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Sett", "title": "the Boss", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Shaco", "title": "the Demon Jester", "tags": ["Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Shen", "title": "the Eye of Twilight", "tags": ["Tank"], "scores": {"engage": 2, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Shyvana", "title": "the Half-Dragon", "tags": ["Fighter", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Singed", "title": "the Mad Chemist", "tags": ["Tank", "Mage"], "scores": {"engage": 2, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Sion", "title": "The Undead Juggernaut", "tags": ["Tank", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Sivir", "title": "the Battle Mistress", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Skarner", "title": "the Primordial Sovereign", "tags": ["Tank", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Smolder", "title": "the Fiery Fledgling", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 2}},
-      {"name": "Sona", "title": "Maven of the Strings", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Soraka", "title": "the Starchild", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Swain", "title": "the Noxian Grand General", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Sylas", "title": "the Unshackled", "tags": ["Mage", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Syndra", "title": "the Dark Sovereign", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Tahm Kench", "title": "The River King", "tags": ["Tank", "Support"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Taliyah", "title": "the Stoneweaver", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Talon", "title": "the Blade's Shadow", "tags": ["Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Taric", "title": "the Shield of Valoran", "tags": ["Support", "Tank"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Teemo", "title": "the Swift Scout", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Thresh", "title": "the Chain Warden", "tags": ["Support", "Tank"], "scores": {"engage": 2, "poke": 1, "cc": 3, "teamfight": 1}},
-      {"name": "Tristana", "title": "the Yordle Gunner", "tags": ["Marksman", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Trundle", "title": "the Troll King", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Tryndamere", "title": "the Barbarian King", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Twisted Fate", "title": "the Card Master", "tags": ["Mage", "Marksman"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Twitch", "title": "the Plague Rat", "tags": ["Marksman", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Udyr", "title": "the Spirit Walker", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Urgot", "title": "the Dreadnought", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Varus", "title": "the Arrow of Retribution", "tags": ["Marksman", "Mage"], "scores": {"engage": 1, "poke": 4, "cc": 1, "teamfight": 1}},
-      {"name": "Vayne", "title": "the Night Hunter", "tags": ["Marksman", "Assassin"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Veigar", "title": "the Tiny Master of Evil", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Vel'Koz", "title": "the Eye of the Void", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Vex", "title": "the Gloomist", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Vi", "title": "the Piltover Enforcer", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Viego", "title": "The Ruined King", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Viktor", "title": "the Herald of the Arcane", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Vladimir", "title": "the Crimson Reaper", "tags": ["Mage", "Fighter"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Volibear", "title": "the Relentless Storm", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Warwick", "title": "the Uncaged Wrath of Zaun", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Xayah", "title": "the Rebel", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Xerath", "title": "the Magus Ascendant", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Xin Zhao", "title": "the Seneschal of Demacia", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Yasuo", "title": "the Unforgiven", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Yone", "title": "the Unforgotten", "tags": ["Fighter", "Assassin"], "scores": {"engage": 3, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Yorick", "title": "Shepherd of Souls", "tags": ["Fighter", "Tank"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Yunara", "title": "the Unbroken Faith", "tags": ["Marksman"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Yuumi", "title": "the Magical Cat", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Zac", "title": "the Secret Weapon", "tags": ["Tank", "Fighter"], "scores": {"engage": 3, "poke": 1, "cc": 2, "teamfight": 1}},
-      {"name": "Zed", "title": "the Master of Shadows", "tags": ["Assassin"], "scores": {"engage": 2, "poke": 1, "cc": 1, "teamfight": 1}},
-      {"name": "Zeri", "title": "The Spark of Zaun", "tags": ["Marksman"], "scores": {"engage": 2, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Ziggs", "title": "the Hexplosives Expert", "tags": ["Mage"], "scores": {"engage": 1, "poke": 3, "cc": 1, "teamfight": 1}},
-      {"name": "Zilean", "title": "the Chronokeeper", "tags": ["Support", "Mage"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}},
-      {"name": "Zoe", "title": "the Aspect of Twilight", "tags": ["Mage"], "scores": {"engage": 1, "poke": 2, "cc": 1, "teamfight": 1}},
-      {"name": "Zyra", "title": "Rise of the Thorns", "tags": ["Mage", "Support"], "scores": {"engage": 1, "poke": 2, "cc": 2, "teamfight": 1}}
-    ].forEach(champ => {
-      championTags[champ.name] = champ;
-    });
-  // Removed stray HTML block that was breaking JS execution
-    // Enhanced synergy scoring function
-    function getSynergyScores(champName) {
-      const champ = championTags[champName];
-      if (!champ) return { engage: 1, poke: 1, cc: 1, teamfight: 1, breakdown: 'Unknown champion' };
-      let { engage, poke, cc, teamfight } = champ.scores;
-      // Boost for multiple tags
-      const tags = champ.tags || [];
-      if (tags.length > 1) {
-        engage += 1;
-        poke += 1;
-        cc += 1;
-        teamfight += 1;
-      }
-      // Use info stats to supplement
-      if (champ.info) {
-        if (champ.info.attack >= 7) poke += 1;
-        if (champ.info.magic >= 7) teamfight += 1;
-        if (champ.info.defense >= 7) cc += 1;
-      }
-      // Clamp to max 5
-      engage = Math.min(engage, 5);
-      poke = Math.min(poke, 5);
-      cc = Math.min(cc, 5);
-      teamfight = Math.min(teamfight, 5);
-      const breakdown = `<div><b>${champName}</b>: Engage ${engage}, Poke ${poke}, CC ${cc}, Teamfight ${teamfight}</div>`;
-      return { engage, poke, cc, teamfight, breakdown };
-    }
-    // --- Data Models ---
-      // User-provided champion pools
-      const championPools = {
-        top: {
-          S: ['Fiora'],
-          A: ['Gwen', 'Ornn', 'Camille', 'Jax'],
-          Counters: ["Poppy", "Cho'Gath", "Renekton", "Jayce", "Pantheon"]
-        },
-        jungle: {
-      e.preventDefault();
-      renderCounterComp();
-  // Initial render on page load
-  renderCounterComp();
-  // Initial render on page load
-  renderCounterComp();
-        const diveList = document.getElementById('dive-list');
-        const pokeList = document.getElementById('poke-list');
-        diveList.innerHTML = '';
-        pokeList.innerHTML = '';
-        // Calculate max possible score for 5 champs (each category: 5 champs * max 4 per champ = 20)
-        const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
-        diveComps.forEach((comp, idx) => {
-          let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
-          let breakdown = '';
-          comp.forEach((champ, i) => {
-            const s = getSynergyScores(champ);
-            scores.engage += s.engage;
-            scores.poke += s.poke;
-            scores.cc += s.cc;
-            scores.teamfight += s.teamfight;
-            breakdown += s.breakdown;
-          });
-          let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
-          const card = document.createElement('div');
-          card.className = 'comp-card';
-          card.innerHTML = `<b>Comp ${idx+1}</b><br>` + comp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall:</b> ${total}/${maxScore.overall}`;
-          diveList.appendChild(card);
-        });
-        pokeComps.forEach((comp, idx) => {
-          let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
-          let breakdown = '';
-          comp.forEach((champ, i) => {
-            const s = getSynergyScores(champ);
-            scores.engage += s.engage;
-            scores.poke += s.poke;
-            scores.cc += s.cc;
-            scores.teamfight += s.teamfight;
-            breakdown += s.breakdown;
-          });
-          let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
-          const card = document.createElement('div');
-          card.className = 'comp-card';
-          card.innerHTML = `<b>Comp ${idx+1}</b><br>` + comp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall:</b> ${total}/${maxScore.overall}`;
-          pokeList.appendChild(card);
-        });
-      }
-      showRecommendedComps();
-      function updateAllComps() {
-        showRecommendedComps();
-        // Always update counter comp after bans, even if no opponent champs entered
-        document.getElementById('opponent-form').dispatchEvent(new Event('submit'));
-      }
-      document.getElementById('ban-form').addEventListener('submit', function() {
-  // Always trigger counter comp update after bans
-  showRecommendedComps();
-  document.getElementById('opponent-form').dispatchEvent(new Event('submit'));
-      });
-      document.getElementById('refresh-bans').addEventListener('click', function() {
-  // Always trigger counter comp update after bans
-  showRecommendedComps();
-  document.getElementById('opponent-form').dispatchEvent(new Event('submit'));
-      });
-
-
-    // --- Manual Comp Builder Logic ---
-    document.getElementById('manual-form').onsubmit = function(e) {
-      e.preventDefault();
-      const top = document.getElementById('manual-top').value.trim();
-      const jungle = document.getElementById('manual-jungle').value.trim();
-      const mid = document.getElementById('manual-mid').value.trim();
-      const adc = document.getElementById('manual-adc').value.trim();
-      const support = document.getElementById('manual-support').value.trim();
-      const champs = [top, jungle, mid, adc, support];
-      // Synergy scoring
-      let notInPool = champs.filter((c, i) => {
-        const lane = ['top','jungle','mid','adc','support'][i];
-        return c && !Object.values(championPools[lane]).flat().map(x => x.toLowerCase()).includes(c.toLowerCase());
-      });
-      let banned = champs.filter(c => c && bannedChamps.includes(c.toLowerCase()));
-      let result = '';
-      if (champs.filter(c => c).length < 5) {
-        result = `<div class='warning'>Please enter all 5 champions.</div>`;
-      } else if (banned.length > 0) {
-        result = `<div class='warning'>Banned: ${banned.join(', ')}. Please choose non-banned champions.</div>`;
-      } else {
-        // Score each champ
-        let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
-        let breakdown = '';
-        const maxScore = { engage: 20, poke: 20, cc: 20, teamfight: 20, overall: 80 };
-        champs.forEach((c, i) => {
-          const s = getSynergyScores(c);
-          scores.engage += s.engage;
-          scores.poke += s.poke;
-          scores.cc += s.cc;
-          scores.teamfight += s.teamfight;
-          breakdown += s.breakdown;
-        });
-        let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
-        result = `<div class='synergy'><b>Synergy Breakdown:</b><br>${breakdown}<br><b>Total Scores:</b> Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall Score:</b> ${total}/${maxScore.overall}</div>`;
-        if (notInPool.length > 0) {
-          result += `<div class='warning'>Note: ${notInPool.join(', ')} not in your champion pools, but comp is valid.</div>`;
-        }
-      }
-      document.getElementById('manual-result').innerHTML = result;
-  };
-  });
-
-    // --- Comp Analysis Logic (Stub) ---
-    function analyzeComp(champs) {
-      // This is a stub. Real logic would analyze synergy, engage, poke, etc.
-      if (champs.filter(c => c).length < 5) {
-        return `<div class='warning'>Please enter all 5 champions.</div>`;
-      }
-      return `<div class='synergy'>Comp synergy analysis coming soon!</div>`;
-    }
-
-    // --- Counter Comp Logic ---
-    // ...existing code...
   </script>
 </body>
 </html>
