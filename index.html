@@ -7,13 +7,11 @@
   <style>
     body {
       font-family: 'Segoe UI', 'Arial', sans-serif;
-      background: linear-gradient(135deg, #0a1420 0%, #1b2740 100%);
+      background: none;
+      position: relative;
       color: #e4c97b;
       margin: 0;
       min-height: 100vh;
-      background-image: url('https://static.wikia.nocookie.net/leagueoflegends/images/7/7e/Summoner%27s_Rift_Map_Texture.png');
-      background-size: cover;
-      background-blend-mode: multiply;
     }
     header {
       background: linear-gradient(90deg, #1b2740 0%, #2e3a5e 100%);
@@ -113,9 +111,40 @@
       border-top: 2px solid #c89b3c;
       margin: 0.7em 0;
     }
+    #bg-stack {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .bg-splash {
+      position: absolute;
+      left: 0;
+      width: 100vw;
+      height: 20vh;
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      z-index: 0;
+      opacity: 1;
+    }
+    main, header, section, .comp-card, .comp-list {
+      position: relative;
+      z-index: 1;
+    }
   </style>
 </head>
 <body>
+  <div id="bg-stack">
+    <div class="bg-splash" style="background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg'); top:0vh; background-position:center 20%;"></div>
+    <div class="bg-splash" style="background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Viego_0.jpg'); top:20vh; background-position:center 10%;"></div>
+    <div class="bg-splash" style="background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Fiora_0.jpg'); top:40vh; background-position:center 5%;"></div>
+    <div class="bg-splash" style="background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Thresh_0.jpg'); top:60vh; background-position:center 0%;"></div>
+    <div class="bg-splash" style="background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Jinx_0.jpg'); top:80vh; background-position:center 20%;"></div>
+  </div>
   <header>League Comp Builder</header>
   <div style="text-align:center; margin-top:1rem; margin-bottom:2rem; font-size:1.2rem; color:#f7b731;">
     <div style="display:inline-block; background:rgba(20,24,38,0.95); border-radius:10px; padding:1rem 2rem; border:2px solid #c89b3c; color:#f7b731; font-size:1.2rem;">
@@ -293,7 +322,7 @@
         Counters: ["Poppy", "Cho'Gath", "Renekton", "Jayce", "Pantheon"]
       },
       jungle: {
-        S: ['Viego', 'Jarvan', 'Lillia', 'Maokai'],
+        S: ['Viego', 'Jarvan IV', 'Lillia', 'Maokai'],
         A: ['Karthus', 'Zyra', 'Sejuani', 'Dr. Mundo', 'Elise', 'Kha Zix', 'Diana', 'Trundle'],
         Counters: ['Ivern', 'Jax', 'Rammus', 'Morgana', 'Taliyah', 'Zac', 'Kayn']
       },
@@ -420,6 +449,62 @@
           return allChoices[0] || 'Any';
         });
       }
+
+      function getCompSummary(scores, comp, lanes) {
+        let summary = '';
+        const { engage, poke, cc, teamfight } = scores;
+        let strengths = [], weaknesses = [], details = [];
+        // Analyze champion synergy and lane fit
+        console.log('getCompSummary called with:', {scores, comp, lanes});
+        comp.forEach((champ, i) => {
+          console.log('Looking up champion for comp:', champ);
+          // Normalize champion name for lookup
+          function normalizeName(name) {
+            return name.replace(/[^aA-zZ0-9]/g, '').toLowerCase();
+          }
+          let champObj = championTags[champ] || Object.values(championTags).find(c => normalizeName(c.name) === normalizeName(champ));
+          if (!champObj) console.warn('Champion not found in championTags:', champ);
+          if (!champObj) return;
+          let lane = lanes[i];
+          let tags = champObj.tags || [];
+          let laneFit = champObj.lanes && champObj.lanes.includes(lane) ? 'primary' : (champObj.lanes && champObj.lanes.length > 0 ? 'off-role' : 'unknown');
+          details.push(`${champ} (${lane}): ${tags.join(', ')}${laneFit === 'primary' ? ' [main role]' : laneFit === 'off-role' ? ' [off-role]' : ''}`);
+        });
+        // Synergy highlights
+        if (engage >= 15) strengths.push('strong engage potential, especially from ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.engage >= 3;
+        }).join(', '));
+        if (poke >= 15) strengths.push('excellent poke from ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.poke >= 3;
+        }).join(', '));
+        if (cc >= 15) strengths.push('high crowd control from ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.cc >= 3;
+        }).join(', '));
+        if (teamfight >= 15) strengths.push('great teamfighting, especially with ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.teamfight >= 2;
+        }).join(', '));
+        // Weaknesses
+        if (engage <= 7) weaknesses.push('weak engage overall');
+        if (poke <= 7) weaknesses.push('low poke');
+        if (cc <= 7) weaknesses.push('limited crowd control');
+        if (teamfight <= 7) weaknesses.push('poor teamfighting');
+        // Off-role warning
+        let offRoles = comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          let lane = lanes[i];
+          return champObj && champObj.lanes && champObj.lanes.length > 0 && !champObj.lanes.includes(lane);
+        });
+        if (offRoles.length) weaknesses.push('off-role picks: ' + offRoles.join(', '));
+        summary += strengths.length ? `<b>Strengths:</b> ${strengths.join('; ')}.<br>` : '';
+        summary += weaknesses.length ? `<b>Weaknesses:</b> ${weaknesses.join('; ')}.` : '';
+        summary += `<br><b>Champion Details:</b> ${details.join(' | ')}`;
+        if (!summary) summary = 'Balanced comp with no major strengths or weaknesses.';
+        return `<div style='margin-top:0.7em; font-size:1em; color:#e4c97b; background:rgba(20,24,38,0.7); border-radius:8px; padding:0.7em;'>${summary}</div>`;
+      }
       diveComps.forEach((comp, idx) => {
         const validComp = getValidComp(comp);
         let scores = { engage: 0, poke: 0, cc: 0, teamfight: 0 };
@@ -446,7 +531,8 @@
   let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
         const card = document.createElement('div');
         card.className = 'comp-card';
-  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${breakdown}`;
+  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${getCompSummary(scores, validComp, ['top','jungle','mid','adc','support'])}${breakdown}`;
+  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#43b581;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${getCompSummary(scores, validComp, ['top','jungle','mid','adc','support'])}${breakdown}`;
         diveList.appendChild(card);
       });
       pokeComps.forEach((comp, idx) => {
@@ -474,13 +560,62 @@
   let total = scores.engage + scores.poke + scores.cc + scores.teamfight;
         const card = document.createElement('div');
         card.className = 'comp-card';
-  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${breakdown}`;
+  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${getCompSummary(scores, validComp, ['top','jungle','mid','adc','support'])}${breakdown}`;
+  card.innerHTML = `<b>Comp ${idx+1}</b><br>` + validComp.map((champ, i) => `<span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span>`).join('<br>') + `<hr><b>Synergy Scores:</b><br>Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><span style='font-size:1.5em; color:#f7b731; font-weight:bold; display:block; margin:0.5em 0;'>Overall Score: ${total}/${maxScore.overall}</span>${getCompSummary(scores, validComp, ['top','jungle','mid','adc','support'])}${breakdown}`;
         pokeList.appendChild(card);
       });
     }
 
     // --- Counter Comp Builder ---
     function renderCounterComp() {
+      function getCompSummary(scores, comp, lanes) {
+        let summary = '';
+        const { engage, poke, cc, teamfight } = scores;
+        let strengths = [], weaknesses = [], details = [];
+        // Analyze champion synergy and lane fit
+        comp.forEach((champ, i) => {
+          let champObj = championTags[champ] || Object.values(championTags).find(c => c.name === champ);
+          if (!champObj) return;
+          let lane = lanes[i];
+          let tags = champObj.tags || [];
+          let laneFit = champObj.lanes && champObj.lanes.includes(lane) ? 'primary' : (champObj.lanes && champObj.lanes.length > 0 ? 'off-role' : 'unknown');
+          details.push(`${champ} (${lane}): ${tags.join(', ')}${laneFit === 'primary' ? ' [main role]' : laneFit === 'off-role' ? ' [off-role]' : ''}`);
+        });
+        // Synergy highlights
+        if (engage >= 15) strengths.push('strong engage potential, especially from ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.engage >= 3;
+        }).join(', '));
+        if (poke >= 15) strengths.push('excellent poke from ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.poke >= 3;
+        }).join(', '));
+        if (cc >= 15) strengths.push('high crowd control from ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.cc >= 3;
+        }).join(', '));
+        if (teamfight >= 15) strengths.push('great teamfighting, especially with ' + comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          return champObj && champObj.scores && champObj.scores.teamfight >= 2;
+        }).join(', '));
+        // Weaknesses
+        if (engage <= 7) weaknesses.push('weak engage overall');
+        if (poke <= 7) weaknesses.push('low poke');
+        if (cc <= 7) weaknesses.push('limited crowd control');
+        if (teamfight <= 7) weaknesses.push('poor teamfighting');
+        // Off-role warning
+        let offRoles = comp.filter((c, i) => {
+          let champObj = championTags[c] || Object.values(championTags).find(ch => ch.name === c);
+          let lane = lanes[i];
+          return champObj && champObj.lanes && champObj.lanes.length > 0 && !champObj.lanes.includes(lane);
+        });
+        if (offRoles.length) weaknesses.push('off-role picks: ' + offRoles.join(', '));
+        summary += strengths.length ? `<b>Strengths:</b> ${strengths.join('; ')}.<br>` : '';
+        summary += weaknesses.length ? `<b>Weaknesses:</b> ${weaknesses.join('; ')}.` : '';
+        summary += `<br><b>Champion Details:</b> ${details.join(' | ')}`;
+        if (!summary) summary = 'Balanced comp with no major strengths or weaknesses.';
+        return `<div style='margin-top:0.7em; font-size:1em; color:#e4c97b; background:rgba(20,24,38,0.7); border-radius:8px; padding:0.7em;'>${summary}</div>`;
+      }
       const oppTop = document.getElementById('opp-top').value.trim().toLowerCase();
       const oppJungle = document.getElementById('opp-jungle').value.trim().toLowerCase();
       const oppMid = document.getElementById('opp-mid').value.trim().toLowerCase();
@@ -501,20 +636,23 @@
         support: getFilteredPool(championPools.support)
       };
       function pickCounter(pool, opp) {
+        // Only pick counters that are in S/A pool
         if (!opp) {
           let sChoices = pool.S;
           let aChoices = pool.A;
           return sChoices[0] || aChoices[0] || 'Any';
         }
-        let countersChoices = pool.Counters.filter(c => c.toLowerCase() !== opp);
-        if (countersChoices.length > 0) return countersChoices[0];
+        // Find counters that are also in S/A pool
+        let saPool = [...pool.S, ...pool.A];
+        let countersInPool = pool.Counters.filter(c => saPool.map(x => x.toLowerCase()).includes(c.toLowerCase()) && c.toLowerCase() !== opp);
+        if (countersInPool.length > 0) return countersInPool[0];
+        // Otherwise, pick from S/A pool (excluding opponent)
         let sChoices = pool.S.filter(c => c.toLowerCase() !== opp);
         if (sChoices.length > 0) return sChoices[0];
         let aChoices = pool.A.filter(c => c.toLowerCase() !== opp);
         if (aChoices.length > 0) return aChoices[0];
-        let allChoices = [...pool.S, ...pool.A, ...pool.Counters].filter(c => c.toLowerCase() !== opp);
-        if (allChoices.length > 0) return allChoices[0];
-        return pool.S[0] || pool.A[0] || pool.Counters[0] || 'Any';
+        // If nothing left, fallback to any S/A pool champion
+        return pool.S[0] || pool.A[0] || 'Any';
       }
       const counterComp = [
         pickCounter(filteredPools.top, oppTop),
@@ -542,7 +680,7 @@
       counterComp.forEach((champ, i) => {
         html += `<div class='comp-card'><span class='champion'>${champ}</span> <span style='color:#faa61a;'>(${lanes[i]})</span></div>`;
       });
-      html += `</div><hr><b>Synergy Breakdown:</b><br>${breakdown}<br><b>Total Scores:</b> Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall Score:</b> ${total}/${maxScore.overall}`;
+  html += `</div><hr><b>Synergy Breakdown:</b><br>${breakdown}${getCompSummary(scores, counterComp, ['top','jungle','mid','adc','support'])}<br><b>Total Scores:</b> Engage: ${scores.engage}/${maxScore.engage}, Poke: ${scores.poke}/${maxScore.poke}, CC: ${scores.cc}/${maxScore.cc}, Teamfight: ${scores.teamfight}/${maxScore.teamfight}<br><b>Overall Score:</b> ${total}/${maxScore.overall}`;
       document.getElementById('counter-comp-result').innerHTML = html;
     }
 
